@@ -3,382 +3,1860 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create QR Code</title>
+    <title>QRCODE // Precision Matrix Studio</title>
+    <meta
+      name="description"
+      content="High-precision QR matrix generator with real-time contrast diagnostics, quiet-zone calibration, and vector/raster export."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
       :root {
-        --bg: #0b1220;
-        --card: rgba(255, 255, 255, 0.06);
-        --cardBorder: rgba(255, 255, 255, 0.12);
-        --text: rgba(255, 255, 255, 0.92);
-        --muted: rgba(255, 255, 255, 0.65);
-        --accent: #4f8cff;
-        --accent2: #22c55e;
-        --danger: #ef4444;
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        --bg-deep: #07080a;
+        --bg-elevated: #0d0f13;
+        --shell-bg: rgba(255, 255, 255, 0.025);
+        --shell-border: rgba(255, 255, 255, 0.07);
+        --core-bg: #111318;
+        --core-border: rgba(255, 255, 255, 0.08);
+        --core-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+        --surface-input: #161920;
+        --surface-hover: #1c2029;
+        --text-primary: #f3f5f8;
+        --text-secondary: #9ba3b0;
+        --text-muted: #5e6673;
+        --accent: #e2f163;
+        --accent-dim: rgba(226, 241, 99, 0.14);
+        --accent-ink: #08090a;
+        --danger: #f06449;
+        --danger-bg: rgba(240, 100, 73, 0.12);
+        --warn: #f59e0b;
+        --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+        --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
       }
 
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
 
       body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-          Arial, "Apple Color Emoji", "Segoe UI Emoji";
-        color: var(--text);
-        background: radial-gradient(
-            1200px 700px at 20% 10%,
-            rgba(79, 140, 255, 0.28),
-            transparent 55%
+        min-height: 100dvh;
+        background-color: var(--bg-deep);
+        background-image: radial-gradient(
+            900px 500px at 12% 0%,
+            rgba(226, 241, 99, 0.055),
+            transparent 65%
           ),
           radial-gradient(
-            1000px 600px at 80% 30%,
-            rgba(34, 197, 94, 0.18),
-            transparent 55%
-          ),
-          var(--bg);
+            800px 500px at 90% 100%,
+            rgba(255, 255, 255, 0.03),
+            transparent 60%
+          );
+        color: var(--text-primary);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 28px 24px 36px;
+        position: relative;
+        overflow-x: hidden;
       }
 
-      .app {
-        width: min(980px, 100%);
+      /* Fixed Subtle Analog Noise Overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 40;
+        opacity: 0.028;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      }
+
+      .container {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      /* Top Floating Instrument Bar */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: rgba(17, 19, 24, 0.85);
+        border: 1px solid var(--core-border);
+        box-shadow: var(--core-highlight), 0 12px 32px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brandMark {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: var(--accent-ink);
         display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 18px;
+        place-items: center;
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 600;
+        font-size: 13px;
+        letter-spacing: -0.04em;
+        box-shadow: 0 2px 12px rgba(226, 241, 99, 0.25);
       }
 
-      .card {
-        background: var(--card);
-        border: 1px solid var(--cardBorder);
-        border-radius: 16px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
+      .brandTitle {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
       }
 
-      .cardHeader {
-        padding: 18px 18px 0 18px;
+      .brandSub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-left: 8px;
+        padding-left: 8px;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .titleRow {
+      .topbarRight {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .liveIndicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusDot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 10px var(--accent);
+      }
+
+      /* Main Asymmetric Workspace Grid */
+      .workspace {
+        display: grid;
+        grid-template-columns: 1.18fr 0.82fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      /* Double-Bezel Hardware Architecture */
+      .bezelShell {
+        background: var(--shell-bg);
+        border: 1px solid var(--shell-border);
+        border-radius: 28px;
+        padding: 7px;
+        box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.65);
+        transition: border-color 0.35s var(--ease-out-expo);
+      }
+
+      .bezelShell:focus-within {
+        border-color: rgba(226, 241, 99, 0.22);
+      }
+
+      .bezelCore {
+        background: var(--core-bg);
+        border: 1px solid var(--core-border);
+        border-radius: 21px;
+        box-shadow: var(--core-highlight);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Section Header */
+      .panelHeader {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 12px;
+        gap: 16px;
       }
 
-      h1 {
-        margin: 0;
-        font-size: 18px;
-        letter-spacing: 0.2px;
+      .panelTitle {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: var(--text-primary);
+        text-wrap: balance;
       }
 
-      .subtitle {
-        margin: 8px 0 0 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.4;
+      .panelDesc {
+        margin-top: 6px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        max-width: 56ch;
       }
 
-      .content {
-        padding: 18px;
+      /* Quick Template Chips */
+      .templateRow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
       }
 
-      .grid {
-        display: grid;
-        gap: 12px;
+      .chipLabel {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-right: 4px;
+      }
+
+      .chip {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--surface-input);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.2s var(--ease-spring),
+          background 0.2s var(--ease-out-expo),
+          color 0.2s var(--ease-out-expo),
+          border-color 0.2s var(--ease-out-expo);
+      }
+
+      .chip:hover {
+        background: var(--surface-hover);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .chip:active {
+        transform: scale(0.97);
+      }
+
+      .chip.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-color: rgba(226, 241, 99, 0.35);
+      }
+
+      /* Form Controls */
+      .fieldGroup {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .labelRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
       }
 
       label {
-        display: block;
-        font-size: 12px;
-        color: var(--muted);
-        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+      }
+
+      .charCount {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .inputWrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
       }
 
       input[type="text"],
       input[type="number"],
-      input[type="color"],
       select {
         width: 100%;
-        padding: 12px 12px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
+        padding: 13px 15px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: var(--surface-input);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
         outline: none;
+        transition: border-color 0.2s var(--ease-out-expo),
+          background 0.2s var(--ease-out-expo),
+          box-shadow 0.2s var(--ease-out-expo);
+      }
+
+      input[type="number"] {
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #payload {
+        padding-right: 92px;
+        font-size: 15px;
       }
 
       input[type="text"]::placeholder {
-        color: rgba(255, 255, 255, 0.35);
+        color: var(--text-muted);
       }
 
-      .row2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .row3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 12px;
-      }
-
-      .actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 6px;
-      }
-
-      button {
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--text);
-        cursor: pointer;
-        font-weight: 600;
-        transition: transform 0.08s ease, background 0.2s ease,
-          border-color 0.2s ease;
-      }
-
-      button:hover {
-        background: rgba(255, 255, 255, 0.12);
+      input[type="text"]:hover,
+      input[type="number"]:hover,
+      select:hover {
         border-color: rgba(255, 255, 255, 0.18);
       }
 
-      button:active {
-        transform: translateY(1px);
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus {
+        background: #1a1e26;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(226, 241, 99, 0.14);
       }
 
-      .primary {
-        background: linear-gradient(
-          135deg,
-          rgba(79, 140, 255, 0.95),
-          rgba(79, 140, 255, 0.65)
-        );
-        border-color: rgba(79, 140, 255, 0.55);
-      }
-
-      .primary:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(79, 140, 255, 1),
-          rgba(79, 140, 255, 0.75)
-        );
-      }
-
-      .success {
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.95),
-          rgba(34, 197, 94, 0.55)
-        );
-        border-color: rgba(34, 197, 94, 0.55);
-      }
-
-      .dangerText {
-        color: #fecaca;
+      .kbdHint {
+        position: absolute;
+        right: 12px;
+        padding: 4px 8px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--text-secondary);
+        pointer-events: none;
       }
 
       .hint {
         font-size: 12px;
-        color: var(--muted);
-        margin-top: 4px;
-        line-height: 1.35;
+        color: var(--text-muted);
+        line-height: 1.4;
       }
 
       .error {
         display: none;
-        margin-top: 10px;
-        padding: 10px 12px;
+        padding: 11px 14px;
         border-radius: 12px;
-        border: 1px solid rgba(239, 68, 68, 0.35);
-        background: rgba(239, 68, 68, 0.12);
-        color: #fecaca;
+        border: 1px solid rgba(240, 100, 73, 0.35);
+        background: var(--danger-bg);
+        color: #ff9b87;
         font-size: 13px;
+        font-weight: 500;
       }
 
-      .rightPane {
+      /* Grid Rows */
+      .specGrid3 {
         display: grid;
-        grid-template-rows: auto 1fr;
-        gap: 18px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
       }
 
-      .previewBox {
-        padding: 18px;
+      .specGrid2 {
         display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+
+      /* Custom Color Swatch Input */
+      .colorField {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: var(--surface-input);
+        transition: border-color 0.2s var(--ease-out-expo);
+      }
+
+      .colorField:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .colorField:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(226, 241, 99, 0.14);
+      }
+
+      input[type="color"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      input[type="color"]::-webkit-color-swatch {
+        border-radius: 7px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .colorHex {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        flex: 1;
+      }
+
+      /* Palette Presets Strip */
+      .paletteStrip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 4px;
+      }
+
+      .swatchGroup {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .paletteBtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: var(--surface-input);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s var(--ease-spring);
+      }
+
+      .paletteBtn:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .paletteDot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+      }
+
+      /* Center Logo Upload & Calibration */
+      .logoUploadRow {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
         gap: 12px;
-        justify-items: center;
+        align-items: stretch;
       }
 
-      .qrFrame {
+      .logoDropzone {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 13px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        background: var(--surface-input);
+        cursor: pointer;
+        transition: border-color 0.2s var(--ease-out-expo),
+          background 0.2s var(--ease-out-expo);
+      }
+
+      .logoDropzone:hover,
+      .logoDropzone.dragover {
+        border-color: var(--accent);
+        background: #1a1e26;
+      }
+
+      .logoDropzone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
         width: 100%;
+        height: 100%;
+      }
+
+      .logoPreviewInfo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+      }
+
+      .logoThumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         display: grid;
         place-items: center;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px dashed rgba(255, 255, 255, 0.18);
+        overflow: hidden;
+        flex-shrink: 0;
+        color: var(--text-secondary);
+      }
+
+      .logoThumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .logoMeta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .logoName {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .logoSub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .logoRemoveBtn {
+        position: relative;
+        z-index: 2;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(240, 100, 73, 0.3);
+        background: var(--danger-bg);
+        color: #ff9b87;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        display: none;
+        transition: background 0.2s var(--ease-out-expo);
+      }
+
+      .logoRemoveBtn:hover {
+        background: rgba(240, 100, 73, 0.24);
+      }
+
+      .logoControlsCol {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: var(--surface-input);
+      }
+
+      .rangeRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid var(--bg-deep);
+        box-shadow: 0 0 8px rgba(226, 241, 99, 0.5);
+        cursor: pointer;
+      }
+
+      .shapePills {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+      }
+
+      .shapeBtn {
+        padding: 4px 6px;
+        border-radius: 7px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.18s var(--ease-out-expo);
+      }
+
+      .shapeBtn.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-color: rgba(226, 241, 99, 0.35);
+      }
+
+      /* Matrix Style Studio (Modules, Eyes, Shaders) */
+      .styleStudioBox {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
         border-radius: 16px;
-        padding: 18px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .moduleGrid6 {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .patternCard {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 6px;
+        border-radius: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--surface-input);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s var(--ease-spring);
+      }
+
+      .patternCard svg {
+        opacity: 0.75;
+        transition: transform 0.2s var(--ease-spring), opacity 0.2s ease;
+      }
+
+      .patternCard:hover {
+        background: var(--surface-hover);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .patternCard:hover svg {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+
+      .patternCard.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-color: rgba(226, 241, 99, 0.42);
+        box-shadow: inset 0 1px 0 rgba(226, 241, 99, 0.15);
+      }
+
+      .patternCard.active svg {
+        opacity: 1;
+      }
+
+      .eyeRow2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .pillGrid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .stylePill {
+        padding: 7px 8px;
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--surface-input);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.18s var(--ease-out-expo);
+      }
+
+      .stylePill:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .stylePill.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-color: rgba(226, 241, 99, 0.4);
+      }
+
+      .specGridColors {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .badgePresetStrip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+      }
+
+      .miniBadgeBtn {
+        padding: 5px 10px;
+        border-radius: 8px;
+        background: var(--surface-input);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.18s var(--ease-out-expo);
+      }
+
+      .miniBadgeBtn:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .miniBadgeBtn.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-color: rgba(226, 241, 99, 0.38);
+      }
+
+      /* Action Bar */
+      .actionBar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .btnPrimary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 8px 8px 8px 22px;
+        border-radius: 999px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform 0.25s var(--ease-spring),
+          box-shadow 0.25s var(--ease-out-expo),
+          background 0.2s var(--ease-out-expo);
+      }
+
+      .btnPrimary:hover {
+        background: #ebf77e;
+        box-shadow: 0 8px 28px rgba(226, 241, 99, 0.25);
+      }
+
+      .btnPrimary:active {
+        transform: scale(0.98);
+      }
+
+      .btnIconCircle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(8, 9, 10, 0.12);
+        display: grid;
+        place-items: center;
+        transition: transform 0.25s var(--ease-spring);
+      }
+
+      .btnPrimary:hover .btnIconCircle {
+        transform: translate(2px, -1px) scale(1.05);
+      }
+
+      .secondaryActions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btnSecondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--surface-input);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform 0.2s var(--ease-spring),
+          background 0.2s var(--ease-out-expo),
+          border-color 0.2s var(--ease-out-expo);
+      }
+
+      .btnSecondary:hover:not(:disabled) {
+        background: var(--surface-hover);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .btnSecondary:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      .btnSecondary:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+
+      .btnGhost {
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-secondary);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s var(--ease-out-expo),
+          background 0.2s var(--ease-out-expo);
+      }
+
+      .btnGhost:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      /* Right Column: Optical Viewport & Diagnostics */
+      .previewStage {
+        position: relative;
+        width: 100%;
         min-height: 320px;
+        border-radius: 16px;
+        background: radial-gradient(
+            circle at center,
+            rgba(255, 255, 255, 0.04) 0%,
+            rgba(255, 255, 255, 0.01) 100%
+          ),
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.02) 0px,
+            rgba(255, 255, 255, 0.02) 1px,
+            transparent 1px,
+            transparent 24px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.02) 0px,
+            rgba(255, 255, 255, 0.02) 1px,
+            transparent 1px,
+            transparent 24px
+          );
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        place-items: center;
+        padding: 28px;
+        overflow: hidden;
+      }
+
+      /* Corner Crosshairs for Precision Hardware Look */
+      .crosshair {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-color: rgba(255, 255, 255, 0.22);
+        pointer-events: none;
+      }
+      .crosshair.tl {
+        top: 12px;
+        left: 12px;
+        border-top: 1.5px solid;
+        border-left: 1.5px solid;
+      }
+      .crosshair.tr {
+        top: 12px;
+        right: 12px;
+        border-top: 1.5px solid;
+        border-right: 1.5px solid;
+      }
+      .crosshair.bl {
+        bottom: 12px;
+        left: 12px;
+        border-bottom: 1.5px solid;
+        border-left: 1.5px solid;
+      }
+      .crosshair.br {
+        bottom: 12px;
+        right: 12px;
+        border-bottom: 1.5px solid;
+        border-right: 1.5px solid;
       }
 
       #qrcode {
         display: grid;
         place-items: center;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        transition: transform 0.35s var(--ease-spring);
       }
 
-      .previewMeta {
-        width: 100%;
-        display: grid;
-        gap: 8px;
+      #qrcode canvas,
+      #qrcode img {
+        display: block;
+        max-width: 100%;
+        height: auto !important;
+        border-radius: 12px;
       }
 
-      .metaRow {
-        display: flex;
-        justify-content: space-between;
+      /* Empty State */
+      .emptyState {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
         gap: 10px;
-        color: var(--muted);
-        font-size: 12px;
+        color: var(--text-muted);
+        padding: 24px;
       }
 
-      .smallCaps {
+      .emptyState svg {
+        opacity: 0.45;
+      }
+
+      .emptyState p {
+        font-size: 13px;
+        max-width: 24ch;
+        line-height: 1.45;
+      }
+
+      /* Telemetry & Diagnostics Card */
+      .telemetryGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .telemetryItem {
+        padding: 12px 14px;
+        border-radius: 13px;
+        background: var(--surface-input);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .telemetryKey {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        color: var(--text-muted);
       }
 
+      .telemetryVal {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .telemetryVal.good {
+        color: var(--accent);
+      }
+
+      .telemetryVal.warn {
+        color: var(--warn);
+      }
+
+      /* Export Drawer */
+      .exportRow {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 10px;
+      }
+
+      /* Recent History Strip */
+      .historySection {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .historyList {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .historyPill {
+        padding: 6px 11px;
+        border-radius: 9px;
+        background: var(--surface-input);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        cursor: pointer;
+        max-width: 160px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: all 0.2s var(--ease-out-expo);
+      }
+
+      .historyPill:hover {
+        color: var(--text-primary);
+        border-color: rgba(226, 241, 99, 0.35);
+      }
+
+      /* Toast Notification */
       .toast {
         position: fixed;
         left: 50%;
-        bottom: 18px;
-        transform: translateX(-50%);
-        padding: 10px 12px;
+        bottom: 24px;
+        transform: translateX(-50%) translateY(16px);
+        padding: 10px 18px;
         border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(0, 0, 0, 0.55);
-        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(226, 241, 99, 0.35);
+        background: rgba(13, 15, 19, 0.92);
+        color: var(--text-primary);
         font-size: 13px;
+        font-weight: 500;
         display: none;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        z-index: 60;
       }
 
-      @media (max-width: 860px) {
-        .app {
+      .toast.visible {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Footer */
+      .footer {
+        width: min(1180px, 100%);
+        margin: 28px auto 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+        padding: 0 8px;
+      }
+
+      /* Responsive Mobile Fallback */
+      @media (max-width: 920px) {
+        .workspace {
           grid-template-columns: 1fr;
         }
-        .qrFrame {
-          min-height: 280px;
+        .specGrid3 {
+          grid-template-columns: 1fr 1fr;
+        }
+        .moduleGrid6 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 16px 14px 28px;
+        }
+        .bezelCore {
+          padding: 20px;
+        }
+        .specGrid3,
+        .specGrid2,
+        .specGridColors,
+        .eyeRow2,
+        .exportRow,
+        .logoUploadRow {
+          grid-template-columns: 1fr;
+        }
+        .moduleGrid6 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .actionBar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .secondaryActions {
+          justify-content: space-between;
+        }
+        .brandSub {
+          display: none;
         }
       }
     </style>
   </head>
 
   <body>
-    <div class="app">
-      <div class="card">
-        <div class="cardHeader">
-          <div class="titleRow">
-            <div>
-              <h1>Create QR Code</h1>
-              <p class="subtitle">
-                Paste any URL or text, adjust options, then generate and download
-                as PNG.
-              </p>
-            </div>
+    <div class="container">
+      <!-- Floating Instrument Header -->
+      <header class="topbar">
+        <div class="brand">
+          <div class="brandMark">QR</div>
+          <div>
+            <span class="brandTitle">Matrix Studio</span>
+            <span class="brandSub">ISO/IEC 18004 CALIBRATED</span>
           </div>
         </div>
+        <div class="topbarRight">
+          <div class="liveIndicator">
+            <span class="statusDot" id="liveDot"></span>
+            <span id="statusText">Ready</span>
+          </div>
+        </div>
+      </header>
 
-        <div class="content">
-          <div class="grid">
-            <div>
-              <label for="payload">Text or URL</label>
-              <input
-                type="text"
-                id="payload"
-                placeholder="e.g. https://example.com or Hello world"
-                autocomplete="off"
-              />
-              <div class="hint">
-                Tip: press <span class="smallCaps">Enter</span> to generate.
+      <!-- Main Asymmetric Bento Workspace -->
+      <main class="workspace">
+        <!-- Left Column: Configuration Deck -->
+        <section class="bezelShell" aria-label="QR Code Configuration">
+          <div class="bezelCore">
+            <div class="panelHeader">
+              <div>
+                <h1 class="panelTitle">Create QR Code</h1>
+                <p class="panelDesc">
+                  Encode any URL, Wi-Fi credential, or text payload with optical
+                  contrast verification and quiet-zone margin calibration.
+                </p>
               </div>
-              <div id="errorBox" class="error"></div>
             </div>
 
-            <div class="row3">
-              <div>
-                <label for="size">Size (px)</label>
-                <input type="number" id="size" min="128" max="1024" value="256" />
+            <!-- Quick Preset Payloads -->
+            <div class="templateRow">
+              <span class="chipLabel">PRESETS</span>
+              <button
+                type="button"
+                class="chip active"
+                data-preset="https://github.com"
+              >
+                Website URL
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-preset="WIFI:T:WPA;S:Studio_5G;P:precision2026;;"
+              >
+                Wi-Fi Access
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-preset="mailto:hello@example.com?subject=Project%20Inquiry"
+              >
+                Email Direct
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-preset="BEGIN:VCARD&#10;VERSION:3.0&#10;FN:Alex Morgan&#10;TEL:+1-415-890-2310&#10;END:VCARD"
+              >
+                vCard Contact
+              </button>
+            </div>
+
+            <!-- Primary Payload Input -->
+            <div class="fieldGroup">
+              <div class="labelRow">
+                <label for="payload">Payload (URL or text)</label>
+                <span class="charCount" id="charCount">18 chars</span>
               </div>
-              <div>
-                <label for="ecc">Error correction</label>
+              <div class="inputWrapper">
+                <input
+                  type="text"
+                  id="payload"
+                  value="https://github.com"
+                  placeholder="https://example.com or text payload..."
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <span class="kbdHint">ENTER ↵</span>
+              </div>
+              <div class="hint">
+                Updates live as you type, or press <strong>Enter</strong> to
+                regenerate immediately.
+              </div>
+              <div id="errorBox" class="error" role="alert"></div>
+            </div>
+
+            <!-- Matrix Geometry & Error Correction -->
+            <div class="specGrid3">
+              <div class="fieldGroup">
+                <label for="size">Resolution (px)</label>
+                <input
+                  type="number"
+                  id="size"
+                  min="128"
+                  max="1024"
+                  step="20"
+                  value="360"
+                />
+              </div>
+
+              <div class="fieldGroup">
+                <label for="ecc">Error Recovery</label>
                 <select id="ecc">
-                  <option value="L">L (7%)</option>
-                  <option value="M" selected>M (15%)</option>
-                  <option value="Q">Q (25%)</option>
-                  <option value="H">H (30%)</option>
+                  <option value="L">Level L (7%)</option>
+                  <option value="M">Level M (15%)</option>
+                  <option value="Q">Level Q (25%)</option>
+                  <option value="H" selected>Level H (30% Max)</option>
                 </select>
               </div>
-              <div>
-                <label for="margin">Margin</label>
-                <input type="number" id="margin" min="0" max="8" value="2" />
+
+              <div class="fieldGroup">
+                <label for="margin">Quiet Zone (modules)</label>
+                <input
+                  type="number"
+                  id="margin"
+                  min="0"
+                  max="8"
+                  value="2"
+                />
               </div>
             </div>
 
-            <div class="row2">
-              <div>
-                <label for="darkColor">Foreground</label>
-                <input type="color" id="darkColor" value="#0b1220" />
+            <!-- Matrix Pattern & Eye Geometry Studio -->
+            <div class="fieldGroup">
+              <div class="labelRow">
+                <label>Matrix Style &amp; Eye Geometry</label>
+                <span class="charCount" id="styleSummaryText">Circular Flowcode · Medallion</span>
               </div>
-              <div>
-                <label for="lightColor">Background</label>
-                <input type="color" id="lightColor" value="#ffffff" />
+
+              <div class="styleStudioBox">
+                <!-- One-Click Designer Style Presets -->
+                <div class="templateRow">
+                  <span class="chipLabel">STYLE DECK</span>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn active"
+                    data-style-preset="sofi-flowcode"
+                  >
+                    SoFi Flowcode (Circle)
+                  </button>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn"
+                    data-style-preset="liquid-pro"
+                  >
+                    Liquid Squircle
+                  </button>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn"
+                    data-style-preset="cyber-dots"
+                  >
+                    Cyber Dots
+                  </button>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn"
+                    data-style-preset="diamond-luxe"
+                  >
+                    Diamond Luxe
+                  </button>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn"
+                    data-style-preset="leaf-organic"
+                  >
+                    Organic Leaf
+                  </button>
+                  <button
+                    type="button"
+                    class="miniBadgeBtn"
+                    data-style-preset="classic-iso"
+                  >
+                    Classic ISO
+                  </button>
+                </div>
+
+                <!-- Frame Architecture & Flowcode Medallion Labels -->
+                <div class="specGrid3" id="flowcodeTextControls">
+                  <div class="fieldGroup">
+                    <label for="brandText" style="font-size: 11px; color: var(--text-secondary)">Center Brand Lockup</label>
+                    <input
+                      type="text"
+                      id="brandText"
+                      value="SoFi"
+                      placeholder="e.g. SoFi"
+                      style="padding: 9px 11px; font-size: 13px"
+                    />
+                  </div>
+                  <div class="fieldGroup">
+                    <label for="rimText" style="font-size: 11px; color: var(--text-secondary)">Curved Bottom Arc Text</label>
+                    <input
+                      type="text"
+                      id="rimText"
+                      value="PRIVACY.FLOWCODE.COM"
+                      placeholder="e.g. PRIVACY.FLOWCODE.COM"
+                      style="padding: 9px 11px; font-size: 12px"
+                    />
+                  </div>
+                  <div class="fieldGroup">
+                    <label for="eyeTagText" style="font-size: 11px; color: var(--text-secondary)">Corner Eye Tag</label>
+                    <input
+                      type="text"
+                      id="eyeTagText"
+                      value="FLOWCODE"
+                      placeholder="e.g. FLOWCODE"
+                      style="padding: 9px 11px; font-size: 12px"
+                    />
+                  </div>
+                </div>
+
+                <!-- 6 Data Module Patterns with Visual Glyphs -->
+                <div>
+                  <div class="telemetryKey" style="margin-bottom: 6px">Data Module Pattern</div>
+                  <div class="moduleGrid6" role="group" aria-label="Data module pattern">
+                    <button type="button" class="patternCard" data-module="square">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="2" width="7" height="7" />
+                        <rect x="11" y="2" width="7" height="7" />
+                        <rect x="2" y="11" width="7" height="7" />
+                        <rect x="11" y="11" width="7" height="7" />
+                      </svg>
+                      <span>Sharp</span>
+                    </button>
+
+                    <button type="button" class="patternCard" data-module="rounded">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="2" width="7" height="7" rx="2.4" />
+                        <rect x="11" y="2" width="7" height="7" rx="2.4" />
+                        <rect x="2" y="11" width="7" height="7" rx="2.4" />
+                        <rect x="11" y="11" width="7" height="7" rx="2.4" />
+                      </svg>
+                      <span>Rounded</span>
+                    </button>
+
+                    <button type="button" class="patternCard" data-module="dots">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="5.5" cy="5.5" r="3.4" />
+                        <circle cx="14.5" cy="5.5" r="3.4" />
+                        <circle cx="5.5" cy="14.5" r="3.4" />
+                        <circle cx="14.5" cy="14.5" r="3.4" />
+                      </svg>
+                      <span>Dots</span>
+                    </button>
+
+                    <button type="button" class="patternCard active" data-module="liquid">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <rect x="2" y="2" width="16" height="7" rx="3.5" />
+                        <rect x="2" y="11" width="7" height="7" rx="3.5" />
+                        <rect x="11" y="11" width="7" height="7" rx="3.5" />
+                      </svg>
+                      <span>Liquid</span>
+                    </button>
+
+                    <button type="button" class="patternCard" data-module="diamond">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <polygon points="5.5,1.5 9.5,5.5 5.5,9.5 1.5,5.5" />
+                        <polygon points="14.5,1.5 18.5,5.5 14.5,9.5 10.5,5.5" />
+                        <polygon points="5.5,10.5 9.5,14.5 5.5,18.5 1.5,14.5" />
+                        <polygon points="14.5,10.5 18.5,14.5 14.5,18.5 10.5,14.5" />
+                      </svg>
+                      <span>Diamond</span>
+                    </button>
+
+                    <button type="button" class="patternCard" data-module="classy">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.5,2 H9 V5.5 A3.5,3.5 0 0,1 5.5,9 H2 V5.5 A3.5,3.5 0 0,1 5.5,2 Z" />
+                        <path d="M14.5,2 H18 V5.5 A3.5,3.5 0 0,1 14.5,9 H11 V5.5 A3.5,3.5 0 0,1 14.5,2 Z" />
+                        <path d="M5.5,11 H9 V14.5 A3.5,3.5 0 0,1 5.5,18 H2 V14.5 A3.5,3.5 0 0,1 5.5,11 Z" />
+                        <path d="M14.5,11 H18 V14.5 A3.5,3.5 0 0,1 14.5,18 H11 V14.5 A3.5,3.5 0 0,1 14.5,11 Z" />
+                      </svg>
+                      <span>Leaf</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Corner Eye Frame & Eye Center -->
+                <div class="eyeRow2">
+                  <div>
+                    <div class="telemetryKey" style="margin-bottom: 6px">Corner Eye Ring</div>
+                    <div class="pillGrid4" role="group" aria-label="Corner eye outer frame">
+                      <button type="button" class="stylePill" data-eye-frame="square">
+                        Sharp
+                      </button>
+                      <button type="button" class="stylePill active" data-eye-frame="squircle">
+                        Squircle
+                      </button>
+                      <button type="button" class="stylePill" data-eye-frame="circle">
+                        Circle
+                      </button>
+                      <button type="button" class="stylePill" data-eye-frame="leaf">
+                        Leaf
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="telemetryKey" style="margin-bottom: 6px">Corner Eye Core</div>
+                    <div class="pillGrid4" role="group" aria-label="Corner eye center shape">
+                      <button type="button" class="stylePill" data-eye-ball="square">
+                        Sharp
+                      </button>
+                      <button type="button" class="stylePill active" data-eye-ball="rounded">
+                        Squircle
+                      </button>
+                      <button type="button" class="stylePill" data-eye-ball="circle">
+                        Circle
+                      </button>
+                      <button type="button" class="stylePill" data-eye-ball="diamond">
+                        Diamond
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="actions">
-              <button class="primary" id="generateBtn" type="button">
-                Generate
-              </button>
-              <button id="clearBtn" type="button">Clear</button>
+            <!-- Color Calibration & Gradient Shader -->
+            <div class="fieldGroup">
+              <div class="labelRow">
+                <label>Optical Contrast &amp; Gradient Shader</label>
+                <span class="charCount" id="contrastBadge">Contrast 18.4:1 · AAA</span>
+              </div>
 
-              <button class="success" id="downloadBtn" type="button" disabled>
-                Download PNG
+              <!-- Shader Mode Selector -->
+              <div class="pillGrid4" role="group" aria-label="Color shader mode">
+                <button type="button" class="stylePill" data-shader="solid">
+                  Solid Ink
+                </button>
+                <button type="button" class="stylePill active" data-shader="linear">
+                  Linear Grad
+                </button>
+                <button type="button" class="stylePill" data-shader="radial">
+                  Radial Glow
+                </button>
+                <button type="button" class="stylePill" data-shader="accent-eyes">
+                  Two-Tone Eyes
+                </button>
+              </div>
+
+              <div class="specGridColors">
+                <div class="colorField">
+                  <input type="color" id="darkColor" value="#ffffff" aria-label="Primary foreground color" />
+                  <div>
+                    <div class="telemetryKey">Modules / Ink</div>
+                    <div class="colorHex" id="darkHex">#FFFFFF</div>
+                  </div>
+                </div>
+
+                <div class="colorField">
+                  <input type="color" id="accentColor" value="#0c628d" aria-label="Gradient or eye accent color" />
+                  <div>
+                    <div class="telemetryKey">Accent / Rim</div>
+                    <div class="colorHex" id="accentHex">#0C628D</div>
+                  </div>
+                </div>
+
+                <div class="colorField">
+                  <input type="color" id="lightColor" value="#071936" aria-label="Background color" />
+                  <div>
+                    <div class="telemetryKey">Disc / Base</div>
+                    <div class="colorHex" id="lightHex">#071936</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Theme Swatches -->
+              <div class="paletteStrip">
+                <div class="swatchGroup">
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#ffffff"
+                    data-accent="#0c628d"
+                    data-light="#071936"
+                  >
+                    <span class="paletteDot" style="background: linear-gradient(135deg, #071936, #0c628d)"></span>
+                    SoFi Ocean
+                  </button>
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#0b1220"
+                    data-accent="#2563eb"
+                    data-light="#ffffff"
+                  >
+                    <span class="paletteDot" style="background: linear-gradient(135deg, #0b1220, #2563eb)"></span>
+                    Cobalt Ink
+                  </button>
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#07080a"
+                    data-accent="#1f2937"
+                    data-light="#e2f163"
+                  >
+                    <span class="paletteDot" style="background: #e2f163"></span>
+                    Acid Volt
+                  </button>
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#064e3b"
+                    data-accent="#0d9488"
+                    data-light="#f0fdf4"
+                  >
+                    <span class="paletteDot" style="background: linear-gradient(135deg, #064e3b, #0d9488)"></span>
+                    Emerald Duotone
+                  </button>
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#18181b"
+                    data-accent="#e11d48"
+                    data-light="#fff1f2"
+                  >
+                    <span class="paletteDot" style="background: linear-gradient(135deg, #18181b, #e11d48)"></span>
+                    Crimson Pulse
+                  </button>
+                  <button
+                    type="button"
+                    class="paletteBtn"
+                    data-dark="#f8fafc"
+                    data-accent="#e2f163"
+                    data-light="#090d16"
+                  >
+                    <span class="paletteDot" style="background: #090d16; border-color: #e2f163"></span>
+                    Night Matrix
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Center Logo Emblem Upload & Calibration -->
+            <div class="fieldGroup">
+              <div class="labelRow">
+                <label for="logoInput">Center Logo Emblem</label>
+                <span class="charCount" id="logoStatusHint">Optional · Auto-ECC H</span>
+              </div>
+
+              <div class="logoUploadRow">
+                <div class="logoDropzone" id="logoDropzone">
+                  <input
+                    type="file"
+                    id="logoInput"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    aria-label="Upload center logo image"
+                  />
+                  <div class="logoPreviewInfo">
+                    <div class="logoThumb" id="logoThumb">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                        <circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                      </svg>
+                    </div>
+                    <div class="logoMeta">
+                      <span class="logoName" id="logoFileName">Upload or drop logo</span>
+                      <span class="logoSub" id="logoFileSub">PNG, SVG, JPG, WebP</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="logoRemoveBtn"
+                    id="logoRemoveBtn"
+                    title="Remove center logo"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div class="logoControlsCol">
+                  <div class="rangeRow">
+                    <span class="telemetryKey">Scale</span>
+                    <span class="charCount" id="logoScaleVal">22%</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="logoScale"
+                    min="14"
+                    max="28"
+                    step="1"
+                    value="22"
+                    aria-label="Logo scale percentage"
+                  />
+                  <div class="shapePills" role="group" aria-label="Logo frame shape">
+                    <button type="button" class="shapeBtn active" data-shape="squircle">
+                      Squircle
+                    </button>
+                    <button type="button" class="shapeBtn" data-shape="circle">
+                      Circle
+                    </button>
+                    <button type="button" class="shapeBtn" data-shape="square">
+                      Square
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Built-in Vector Emblems -->
+              <div class="badgePresetStrip">
+                <span class="chipLabel">QUICK EMBLEMS</span>
+                <button type="button" class="miniBadgeBtn active" data-emblem="none">
+                  None
+                </button>
+                <button type="button" class="miniBadgeBtn" data-emblem="github">
+                  GitHub
+                </button>
+                <button type="button" class="miniBadgeBtn" data-emblem="globe">
+                  Web Globe
+                </button>
+                <button type="button" class="miniBadgeBtn" data-emblem="wifi">
+                  Wi-Fi
+                </button>
+                <button type="button" class="miniBadgeBtn" data-emblem="verified">
+                  Verified
+                </button>
+                <button type="button" class="miniBadgeBtn" data-emblem="bolt">
+                  Volt Bolt
+                </button>
+              </div>
+            </div>
+
+            <!-- Primary Controls -->
+            <div class="actionBar">
+              <button class="btnPrimary" id="generateBtn" type="button">
+                <span>Generate Matrix</span>
+                <span class="btnIconCircle" aria-hidden="true">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </span>
               </button>
-              <button id="copyBtn" type="button" disabled>Copy text</button>
+
+              <div class="secondaryActions">
+                <button class="btnSecondary" id="copyBtn" type="button">
+                  Copy Payload
+                </button>
+                <button class="btnGhost" id="clearBtn" type="button">
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="rightPane">
-        <div class="card">
-          <div class="content previewBox">
-            <div class="qrFrame">
-              <div id="qrcode"></div>
+        <!-- Right Column: Live Optical Preview & Export -->
+        <aside class="bezelShell" aria-label="QR Code Preview and Export">
+          <div class="bezelCore">
+            <div class="PreviewStageWrap">
+              <div class="previewStage">
+                <span class="crosshair tl"></span>
+                <span class="crosshair tr"></span>
+                <span class="crosshair bl"></span>
+                <span class="crosshair br"></span>
+
+                <div id="qrcode"></div>
+
+                <div class="emptyState" id="emptyState">
+                  <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect width="5" height="5" x="3" y="3" rx="1" />
+                    <rect width="5" height="5" x="16" y="3" rx="1" />
+                    <rect width="5" height="5" x="3" y="16" rx="1" />
+                    <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+                    <path d="M21 21v.01" />
+                    <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+                    <path d="M3 12h.01" />
+                    <path d="M12 3h.01" />
+                    <path d="M12 16v.01" />
+                    <path d="M16 12h1" />
+                    <path d="M21 12v.01" />
+                    <path d="M12 21v-1" />
+                  </svg>
+                  <p>Enter a URL or text on the left to render a scannable matrix.</p>
+                </div>
+              </div>
             </div>
 
-            <div class="previewMeta">
-              <div class="metaRow">
-                <span class="smallCaps">Status</span>
-                <span id="statusText">Waiting for input</span>
+            <!-- Telemetry Readout -->
+            <div class="telemetryGrid">
+              <div class="telemetryItem">
+                <span class="telemetryKey">Specification</span>
+                <span class="telemetryVal" id="metaText">280×280px · ECC M</span>
               </div>
-              <div class="metaRow">
-                <span class="smallCaps">Preview</span>
-                <span id="metaText">No QR generated</span>
+              <div class="telemetryItem">
+                <span class="telemetryKey">Scannability</span>
+                <span class="telemetryVal good" id="scanStatus">Optimal Read</span>
               </div>
+            </div>
+
+            <!-- Export Actions -->
+            <div class="exportRow">
+              <button class="btnPrimary" id="downloadBtn" type="button" style="width: 100%">
+                <span>Download PNG</span>
+                <span class="btnIconCircle" aria-hidden="true">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                </span>
+              </button>
+
+              <button class="btnSecondary" id="copyImgBtn" type="button">
+                Copy Image
+              </button>
+            </div>
+
+            <!-- Recent History -->
+            <div class="historySection">
+              <div class="labelRow">
+                <span class="telemetryKey">Recent Matrices</span>
+              </div>
+              <div class="historyList" id="historyList"></div>
             </div>
           </div>
-        </div>
-      </div>
+        </aside>
+      </main>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <footer class="footer">
+      <span>QRCODE Matrix Utility · Client-Side Rendering</span>
+      <span>Zero network payload transmission</span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
       const payloadEl = document.getElementById("payload");
@@ -386,27 +1864,78 @@
       const eccEl = document.getElementById("ecc");
       const marginEl = document.getElementById("margin");
       const darkColorEl = document.getElementById("darkColor");
+      const accentColorEl = document.getElementById("accentColor");
       const lightColorEl = document.getElementById("lightColor");
+      const darkHexEl = document.getElementById("darkHex");
+      const accentHexEl = document.getElementById("accentHex");
+      const lightHexEl = document.getElementById("lightHex");
+      const contrastBadgeEl = document.getElementById("contrastBadge");
+      const charCountEl = document.getElementById("charCount");
+      const styleSummaryTextEl = document.getElementById("styleSummaryText");
 
       const qrCodeContainer = document.getElementById("qrcode");
+      const emptyStateEl = document.getElementById("emptyState");
       const statusText = document.getElementById("statusText");
+      const liveDot = document.getElementById("liveDot");
       const metaText = document.getElementById("metaText");
+      const scanStatus = document.getElementById("scanStatus");
       const errorBox = document.getElementById("errorBox");
 
       const generateBtn = document.getElementById("generateBtn");
       const clearBtn = document.getElementById("clearBtn");
       const downloadBtn = document.getElementById("downloadBtn");
       const copyBtn = document.getElementById("copyBtn");
-
+      const copyImgBtn = document.getElementById("copyImgBtn");
+      const historyListEl = document.getElementById("historyList");
       const toastEl = document.getElementById("toast");
+
+      // Center Logo Elements & State
+      const logoInputEl = document.getElementById("logoInput");
+      const logoDropzoneEl = document.getElementById("logoDropzone");
+      const logoThumbEl = document.getElementById("logoThumb");
+      const logoFileNameEl = document.getElementById("logoFileName");
+      const logoFileSubEl = document.getElementById("logoFileSub");
+      const logoRemoveBtn = document.getElementById("logoRemoveBtn");
+      const logoScaleEl = document.getElementById("logoScale");
+      const logoScaleValEl = document.getElementById("logoScaleVal");
+      const logoStatusHintEl = document.getElementById("logoStatusHint");
+
+      // Flowcode Medallion Text Inputs
+      const brandTextEl = document.getElementById("brandText");
+      const rimTextEl = document.getElementById("rimText");
+      const eyeTagTextEl = document.getElementById("eyeTagText");
+      const flowcodeTextControlsEl = document.getElementById("flowcodeTextControls");
+
+      let activeLogoImage = null;
+      let activeLogoShape = "squircle";
+
+      // Matrix Style State (Default: Circular SoFi Flowcode Medallion)
+      let activeFrameMode = "flowcode";
+      let activeModuleStyle = "dots";
+      let activeEyeFrame = "squircle";
+      let activeEyeBall = "rounded";
+      let activeShader = "solid";
+
+      const defaultThumbSvg = logoThumbEl.innerHTML;
+
+      // Built-in Vector Emblem SVG Generators
+      const builtInEmblems = {
+        github: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b1220"><path d="M12 1.5C6.2 1.5 1.5 6.2 1.5 12c0 4.65 3.01 8.59 7.19 9.98.53.1.72-.23.72-.51v-1.8c-2.92.64-3.54-1.41-3.54-1.41-.48-1.21-1.17-1.53-1.17-1.53-.95-.65.07-.64.07-.64 1.05.07 1.61 1.08 1.61 1.08.94 1.6 2.46 1.14 3.06.87.09-.68.37-1.14.67-1.4-2.33-.27-4.79-1.17-4.79-5.19 0-1.15.41-2.09 1.08-2.82-.11-.27-.47-1.34.1-2.8 0 0 .88-.28 2.89 1.08a10.02 10.02 0 0 1 5.26 0c2.01-1.36 2.89-1.08 2.89-1.08.57 1.46.21 2.53.1 2.8.67.73 1.08 1.67 1.08 2.82 0 4.03-2.46 4.92-4.8 5.18.38.33.72.97.72 1.96v2.9c0 .28.19.61.73.51A10.51 10.51 0 0 0 22.5 12c0-5.8-4.7-10.5-10.5-10.5Z"/></svg>`,
+        globe: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg>`,
+        wifi: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>`,
+        verified: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 1.5l2.8 2.1 3.4-.5 1.2 3.3 3.1 1.6-.9 3.4 1.6 3.1-3.1 1.6-.5 3.4-3.4-.5L12 21.7l-3.8-2.7-3.4.5-.5-3.4-3.1-1.6 1.6-3.1-.9-3.4 3.1-1.6 1.2-3.3 3.4.5L12 1.5z"/><path d="M8.5 12.2l2.3 2.3 4.8-4.8" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        bolt: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b1220"><rect width="24" height="24" rx="6" fill="#e2f163"/><polygon points="13 3 5 14 12 14 11 21 19 10 12 10 13 3" fill="#07080a"/></svg>`,
+      };
+
+      const recentPayloads = ["https://github.com"];
 
       function showToast(msg) {
         toastEl.textContent = msg;
-        toastEl.style.display = "block";
+        toastEl.classList.add("visible");
         clearTimeout(showToast._t);
         showToast._t = setTimeout(() => {
-          toastEl.style.display = "none";
-        }, 1400);
+          toastEl.classList.remove("visible");
+        }, 1800);
       }
 
       function setError(msg) {
@@ -434,45 +1963,844 @@
         }
       }
 
-      function generateQRCode() {
+      // Compute WCAG relative luminance & contrast ratio for scannability check
+      function hexToLuminance(hex) {
+        const clean = hex.replace("#", "");
+        const r = parseInt(clean.substring(0, 2), 16) / 255;
+        const g = parseInt(clean.substring(2, 4), 16) / 255;
+        const b = parseInt(clean.substring(4, 6), 16) / 255;
+        const [lr, lg, lb] = [r, g, b].map((c) =>
+          c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+        );
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      }
+
+      function evaluateContrast(darkHex, lightHex) {
+        const l1 = hexToLuminance(darkHex);
+        const l2 = hexToLuminance(lightHex);
+        const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        const inverted = l1 > l2;
+        return { ratio: ratio.toFixed(1), inverted };
+      }
+
+      function updateColorTelemetry() {
+        const dark = darkColorEl.value.toUpperCase();
+        const accent = accentColorEl.value.toUpperCase();
+        const light = lightColorEl.value.toUpperCase();
+        darkHexEl.textContent = dark;
+        accentHexEl.textContent = accent;
+        lightHexEl.textContent = light;
+
+        const { ratio, inverted } = evaluateContrast(dark, light);
+        contrastBadgeEl.textContent = `Contrast ${ratio}:1`;
+
+        const modNames = {
+          square: "Sharp",
+          rounded: "Rounded",
+          dots: "Dots",
+          liquid: "Liquid",
+          diamond: "Diamond",
+          classy: "Leaf",
+        };
+        const eyeNames = {
+          square: "Sharp",
+          squircle: "Squircle",
+          circle: "Circle",
+          leaf: "Leaf",
+        };
+        if (activeFrameMode === "flowcode") {
+          styleSummaryTextEl.textContent = "Circular Flowcode · Medallion";
+          scanStatus.textContent = ratio < 3.0 ? "Low Contrast Risk" : "Optimal Read";
+          scanStatus.className = ratio < 3.0 ? "telemetryVal warn" : "telemetryVal good";
+          return;
+        }
+
+        styleSummaryTextEl.textContent = `${modNames[activeModuleStyle] || "Custom"} · ${eyeNames[activeEyeFrame] || "Custom"} Eyes`;
+
+        if (ratio < 3.5) {
+          scanStatus.textContent = "Low Contrast Risk";
+          scanStatus.className = "telemetryVal warn";
+        } else if (inverted) {
+          scanStatus.textContent = "Inverted Polarity";
+          scanStatus.className = "telemetryVal warn";
+        } else {
+          scanStatus.textContent = "Optimal Read";
+          scanStatus.className = "telemetryVal good";
+        }
+      }
+
+      function renderHistory() {
+        historyListEl.innerHTML = "";
+        recentPayloads.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "historyPill";
+          btn.textContent = item;
+          btn.title = item;
+          btn.addEventListener("click", () => {
+            payloadEl.value = item;
+            generateQRCode(false);
+          });
+          historyListEl.appendChild(btn);
+        });
+      }
+
+      function pushHistory(payload) {
+        if (!payload) return;
+        const existingIdx = recentPayloads.indexOf(payload);
+        if (existingIdx !== -1) {
+          recentPayloads.splice(existingIdx, 1);
+        }
+        recentPayloads.unshift(payload);
+        if (recentPayloads.length > 5) recentPayloads.pop();
+        renderHistory();
+      }
+
+      // Draw rounded/circular/square path helper
+      function traceBadgeShape(ctx, x, y, size, shape) {
+        ctx.beginPath();
+        if (shape === "circle") {
+          ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+        } else {
+          const r = shape === "squircle" ? Math.round(size * 0.24) : Math.round(size * 0.06);
+          ctx.roundRect(x, y, size, size, r);
+        }
+        ctx.closePath();
+      }
+
+      // Check if module (r, c) belongs to one of the three 7x7 Finder Patterns
+      function isFinderPattern(r, c, count) {
+        if (r < 7 && c < 7) return true;
+        if (r < 7 && c >= count - 7) return true;
+        if (r >= count - 7 && c < 7) return true;
+        return false;
+      }
+
+      // Build fill style (Solid, Linear Gradient, Radial Gradient)
+      function createMatrixFill(ctx, targetSize, darkColor, accentColor, shaderMode) {
+        if (shaderMode === "linear") {
+          const grad = ctx.createLinearGradient(0, 0, targetSize, targetSize);
+          grad.addColorStop(0, darkColor);
+          grad.addColorStop(1, accentColor);
+          return grad;
+        }
+        if (shaderMode === "radial") {
+          const center = targetSize / 2;
+          const grad = ctx.createRadialGradient(
+            center,
+            center,
+            targetSize * 0.08,
+            center,
+            center,
+            targetSize * 0.65
+          );
+          grad.addColorStop(0, accentColor);
+          grad.addColorStop(1, darkColor);
+          return grad;
+        }
+        return darkColor;
+      }
+
+      // Draw a single 7x7 Finder Pattern (Outer 7x7 Ring + Inner 3x3 Core)
+      function drawFinderEye(ctx, startX, startY, cellSize, frameStyle, ballStyle, ringFill, ballFill) {
+        const outerSize = cellSize * 7;
+        const innerCutSize = cellSize * 5;
+        const cutOffset = cellSize;
+
+        // 1. Outer 7x7 Ring using evenodd fill
+        ctx.save();
+        ctx.fillStyle = ringFill;
+        ctx.beginPath();
+
+        if (frameStyle === "circle") {
+          const cx = startX + outerSize / 2;
+          const cy = startY + outerSize / 2;
+          ctx.arc(cx, cy, outerSize / 2, 0, Math.PI * 2);
+          ctx.arc(cx, cy, innerCutSize / 2, 0, Math.PI * 2, true);
+        } else {
+          let outerRadii = [0, 0, 0, 0];
+          let innerRadii = [0, 0, 0, 0];
+          if (frameStyle === "squircle") {
+            const rOut = cellSize * 2.1;
+            const rIn = cellSize * 1.35;
+            outerRadii = [rOut, rOut, rOut, rOut];
+            innerRadii = [rIn, rIn, rIn, rIn];
+          } else if (frameStyle === "leaf") {
+            const rOut = cellSize * 2.5;
+            const rIn = cellSize * 1.65;
+            outerRadii = [rOut, 0, rOut, 0];
+            innerRadii = [rIn, 0, rIn, 0];
+          }
+          ctx.roundRect(startX, startY, outerSize, outerSize, outerRadii);
+          ctx.roundRect(
+            startX + cutOffset,
+            startY + cutOffset,
+            innerCutSize,
+            innerCutSize,
+            innerRadii
+          );
+        }
+        ctx.fill("evenodd");
+        ctx.restore();
+
+        // 2. Inner 3x3 Eye Core
+        const ballX = startX + cellSize * 2;
+        const ballY = startY + cellSize * 2;
+        const ballSize = cellSize * 3;
+
+        ctx.save();
+        ctx.fillStyle = ballFill;
+        ctx.beginPath();
+        if (ballStyle === "circle") {
+          ctx.arc(
+            ballX + ballSize / 2,
+            ballY + ballSize / 2,
+            ballSize / 2,
+            0,
+            Math.PI * 2
+          );
+        } else if (ballStyle === "diamond") {
+          const cx = ballX + ballSize / 2;
+          const cy = ballY + ballSize / 2;
+          const half = ballSize / 2;
+          ctx.moveTo(cx, cy - half);
+          ctx.lineTo(cx + half, cy);
+          ctx.lineTo(cx, cy + half);
+          ctx.lineTo(cx - half, cy);
+          ctx.closePath();
+        } else if (ballStyle === "rounded") {
+          ctx.roundRect(ballX, ballY, ballSize, ballSize, cellSize * 0.95);
+        } else {
+          ctx.rect(ballX, ballY, ballSize, ballSize);
+        }
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw curved text along the bottom arc (counter-clockwise / upright reading left-to-right)
+      function drawCurvedBottomText(ctx, text, cx, cy, radius, fillColor, fontSize) {
+        if (!text) return;
+        ctx.save();
+        ctx.font = `700 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+        ctx.fillStyle = fillColor;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const chars = text.split("");
+        const charAngle = fontSize * 0.72 / radius;
+        const totalAngle = charAngle * (chars.length - 1);
+        const startAngle = Math.PI / 2 + totalAngle / 2;
+
+        for (let i = 0; i < chars.length; i++) {
+          const theta = startAngle - i * charAngle;
+          const x = cx + radius * Math.cos(theta);
+          const y = cy + radius * Math.sin(theta);
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(theta - Math.PI / 2);
+          ctx.fillText(chars[i], 0, 0);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      // Draw Circular Flowcode Medallion (matches SoFi Flowcode design)
+      function renderFlowcodeMedallion(qrModel, lightColor, darkColor, accentColor, targetSize) {
+        const scale = 2; // 2x supersampling for crisp arcs & curved typography
+        const S = targetSize * scale;
+        const canvas = document.createElement("canvas");
+        canvas.width = S;
+        canvas.height = S;
+        canvas.style.width = `${targetSize}px`;
+        canvas.style.height = `${targetSize}px`;
+        const ctx = canvas.getContext("2d");
+
+        const cx = S / 2;
+        const cy = S / 2;
+        const R = S * 0.482;
+
+        // 1. Clip to Outer Medallion Circle & Fill Deep Oceanic Gradient
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.clip();
+
+        const bgGrad = ctx.createLinearGradient(cx - R * 0.85, cy - R * 0.85, cx + R * 0.9, cy + R * 0.9);
+        bgGrad.addColorStop(0, lightColor);
+        bgGrad.addColorStop(0.55, "#08365c");
+        bgGrad.addColorStop(1, accentColor);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, S, S);
+
+        // Subtle geometric facet overlays in outer rim
+        ctx.fillStyle = "rgba(0, 0, 0, 0.14)";
+        ctx.beginPath();
+        ctx.moveTo(cx - R, cy - R * 0.1);
+        ctx.lineTo(cx - R * 0.35, cy + R);
+        ctx.lineTo(cx - R, cy + R);
+        ctx.closePath();
+        ctx.fill();
+
+        // Left rim cyan dot-matrix tech texture (tilted)
+        ctx.save();
+        ctx.translate(cx - R * 0.82, cy - R * 0.16);
+        ctx.rotate(-0.55);
+        ctx.fillStyle = "rgba(72, 187, 235, 0.25)";
+        const dotStep = R * 0.036;
+        for (let dr = -4; dr <= 4; dr++) {
+          for (let dc = -2; dc <= 2; dc++) {
+            ctx.beginPath();
+            ctx.arc(dc * dotStep, dr * dotStep, R * 0.008, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // Right rim parallel diagonal hatch lines
+        ctx.save();
+        ctx.translate(cx + R * 0.82, cy + R * 0.18);
+        ctx.rotate(-1.08);
+        ctx.strokeStyle = "rgba(120, 215, 250, 0.13)";
+        ctx.lineWidth = R * 0.006;
+        const lineStep = R * 0.032;
+        for (let i = -5; i <= 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(-R * 0.18, i * lineStep);
+          ctx.lineTo(R * 0.18, i * lineStep);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.restore(); // End medallion clip
+
+        // Outer dark rim border + inner thin highlight ring
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.strokeStyle = "#040d1a";
+        ctx.lineWidth = R * 0.024;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * 0.962, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(88, 196, 245, 0.34)";
+        ctx.lineWidth = R * 0.007;
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Segmented White Orbit Ring
+        const R_orbit = R * 0.79;
+        ctx.save();
+        ctx.strokeStyle = darkColor;
+        ctx.lineWidth = R * 0.015;
+        ctx.lineCap = "round";
+
+        const deg = (d) => (d * Math.PI) / 180;
+        const arcs = [
+          [-119, -61], // Top arc between TL and TR eyes
+          [-26, 26],   // Right arc
+          [56, 124],   // Bottom arc under curved text
+          [154, 206],  // Left arc
+        ];
+        arcs.forEach(([a1, a2]) => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, R_orbit, deg(a1), deg(a2));
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        if (!qrModel || typeof qrModel.getModuleCount !== "function") {
+          return canvas;
+        }
+
+        // 3. Inscribed QR Grid (Rotated 90° CW so the 3 Finder Eyes sit at TL, TR, and BR!)
+        const count = qrModel.getModuleCount();
+        const gridSpan = R_orbit * 1.38;
+        const cellSize = gridSpan / count;
+        const startX = cx - gridSpan / 2;
+        const startY = cy - gridSpan / 2;
+
+        // Helper for 90° CW rotated QR matrix lookup
+        function isRotatedDark(r, c) {
+          const origR = count - 1 - c;
+          const origC = r;
+          if (origR < 0 || origC < 0 || origR >= count || origC >= count) return false;
+          return qrModel.isDark(origR, origC);
+        }
+
+        // Check if (r, c) is inside one of the 3 rotated Finder Eyes (TL, TR, BR) + 1-cell buffer
+        function isNearRotatedEye(r, c) {
+          // TL eye: rows 0..6, cols 0..6
+          if (r >= -1 && r <= 7 && c >= -1 && c <= 7) return true;
+          // TR eye: rows 0..6, cols count-7..count-1
+          if (r >= -1 && r <= 7 && c >= count - 8 && c <= count) return true;
+          // BR eye: rows count-7..count-1, cols count-7..count-1 (plus space below for FLOWCODE label)
+          if (r >= count - 8 && r <= count + 2 && c >= count - 8 && c <= count) return true;
+          return false;
+        }
+
+        const brandStr = (brandTextEl ? brandTextEl.value.trim() : "SoFi");
+        const rimStr = (rimTextEl ? rimTextEl.value.trim() : "PRIVACY.FLOWCODE.COM");
+        const eyeTagStr = (eyeTagTextEl ? eyeTagTextEl.value.trim() : "FLOWCODE");
+        const hasCenterBrand = Boolean(activeLogoImage || brandStr);
+
+        // 4. Draw Circular Dot Cloud (Real QR Modules + Halo Cap Filler Dots)
+        const maxDotRadius = R_orbit * 0.915;
+        const textGuardRadius = R_orbit * 0.82;
+        const dotR = cellSize * 0.415;
+
+        ctx.save();
+        ctx.fillStyle = darkColor;
+
+        const padCells = 6;
+        for (let r = -padCells; r < count + padCells; r++) {
+          for (let c = -padCells; c < count + padCells; c++) {
+            if (isNearRotatedEye(r, c)) continue;
+
+            const x = startX + (c + 0.5) * cellSize;
+            const y = startY + (r + 0.5) * cellSize;
+            const dx = x - cx;
+            const dy = y - cy;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > maxDotRadius) continue;
+
+            // Keep bottom rim arc text zone clear
+            const angle = Math.atan2(dy, dx);
+            if (rimStr && dist > textGuardRadius && angle > deg(48) && angle < deg(132)) {
+              continue;
+            }
+
+            // Keep center brand banner / logo zone clear
+            if (hasCenterBrand) {
+              const clearW = R_orbit * 0.44;
+              const clearH = R_orbit * 0.165;
+              if (Math.abs(dx) < clearW && Math.abs(dy) < clearH) {
+                continue;
+              }
+            }
+
+            const inCore = r >= 0 && r < count && c >= 0 && c < count;
+            let drawDot = false;
+            if (inCore) {
+              drawDot = isRotatedDark(r, c);
+            } else {
+              // Deterministic organic halo pattern for circular caps
+              const hash = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+              drawDot = hash - Math.floor(hash) > 0.44;
+            }
+
+            if (drawDot) {
+              ctx.beginPath();
+              ctx.arc(x, y, dotR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+        ctx.restore();
+
+        // 5. Draw the 3 Squircle Finder Eyes (TL, TR, and Notched BR with FLOWCODE tag)
+        function drawFlowcodeEye(ex, ey, notchedBottom) {
+          const outerW = cellSize * 7;
+          const innerW = cellSize * 4.9;
+          const cutOff = (outerW - innerW) / 2;
+          const rOut = cellSize * 1.45;
+          const rIn = cellSize * 0.65;
+
+          ctx.save();
+          ctx.fillStyle = darkColor;
+          ctx.beginPath();
+          ctx.roundRect(ex, ey, outerW, outerW, rOut);
+          ctx.roundRect(ex + cutOff, ey + cutOff, innerW, innerW, rIn);
+          ctx.fill("evenodd");
+
+          // If bottom-right Flowcode eye, carve the open bottom notch on the inner corners
+          if (notchedBottom) {
+            ctx.save();
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.fillRect(
+              ex + cutOff,
+              ey + outerW - cutOff - 1,
+              innerW,
+              cutOff + 3
+            );
+            ctx.restore();
+            // Redraw background gradient into the carved notch
+            ctx.save();
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(
+              ex + cutOff,
+              ey + outerW - cutOff - 0.5,
+              innerW,
+              cutOff + 2
+            );
+            ctx.restore();
+          }
+
+          // Inner 3x3 core
+          const ballW = cellSize * 3.05;
+          const ballOff = (outerW - ballW) / 2;
+          ctx.fillStyle = darkColor;
+          ctx.beginPath();
+          ctx.roundRect(ex + ballOff, ey + ballOff, ballW, ballW, cellSize * 0.55);
+          ctx.fill();
+
+          if (notchedBottom && eyeTagStr) {
+            ctx.font = `italic 800 ${Math.round(cellSize * 1.05)}px "Plus Jakarta Sans", sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText(eyeTagStr, ex + outerW / 2, ey + outerW + cellSize * 0.25);
+          }
+          ctx.restore();
+        }
+
+        drawFlowcodeEye(startX, startY, false); // Top-Left
+        drawFlowcodeEye(startX + (count - 7) * cellSize, startY, false); // Top-Right
+        drawFlowcodeEye(startX + (count - 7) * cellSize, startY + (count - 7) * cellSize, true); // Bottom-Right
+
+        // 6. Draw Center Brand Lockup ("SoFi" + 3x3 Circle-Grid Icon OR Uploaded Logo)
+        if (activeLogoImage) {
+          const scalePct = Math.max(14, Math.min(28, Number(logoScaleEl.value || 22))) / 100;
+          const badgeSize = Math.round(S * scalePct);
+          const logoX = Math.round(cx - badgeSize / 2);
+          const logoY = Math.round(cy - badgeSize / 2);
+
+          ctx.save();
+          traceBadgeShape(ctx, logoX, logoY, badgeSize, activeLogoShape);
+          ctx.clip();
+          const imgW = activeLogoImage.naturalWidth || activeLogoImage.width || badgeSize;
+          const imgH = activeLogoImage.naturalHeight || activeLogoImage.height || badgeSize;
+          const ratio = Math.min(badgeSize / imgW, badgeSize / imgH);
+          const drawW = imgW * ratio;
+          const drawH = imgH * ratio;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(
+            activeLogoImage,
+            logoX + (badgeSize - drawW) / 2,
+            logoY + (badgeSize - drawH) / 2,
+            drawW,
+            drawH
+          );
+          ctx.restore();
+        } else if (brandStr) {
+          ctx.save();
+          ctx.fillStyle = darkColor;
+          ctx.strokeStyle = darkColor;
+          const fontSize = Math.round(R_orbit * 0.235);
+          ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+          ctx.textBaseline = "middle";
+
+          const textMetrics = ctx.measureText(brandStr);
+          const iconBox = fontSize * 0.78;
+          const gap = fontSize * 0.24;
+          const totalW = textMetrics.width + gap + iconBox;
+          const startLockX = cx - totalW / 2;
+
+          ctx.textAlign = "left";
+          ctx.fillText(brandStr, startLockX, cy + fontSize * 0.03);
+
+          // Draw signature 3x3 SoFi circle-grid mark on the right of the brand text
+          const gridX = startLockX + textMetrics.width + gap;
+          const gridY = cy - iconBox / 2;
+          const step = iconBox / 3;
+          const cRad = step * 0.42;
+
+          for (let gr = 0; gr < 3; gr++) {
+            for (let gc = 0; gc < 3; gc++) {
+              const gx = gridX + (gc + 0.5) * step;
+              const gy = gridY + (gr + 0.5) * step;
+              const isHollow = (gr === 0 && gc === 2) || (gr === 1 && gc === 1);
+              ctx.beginPath();
+              ctx.arc(gx, gy, isHollow ? cRad * 0.85 : cRad, 0, Math.PI * 2);
+              if (isHollow) {
+                ctx.lineWidth = Math.max(2, fontSize * 0.055);
+                ctx.stroke();
+              } else {
+                ctx.fill();
+              }
+            }
+          }
+          ctx.restore();
+        }
+
+        // 7. Draw Curved Bottom Rim Text ("PRIVACY.FLOWCODE.COM")
+        if (rimStr) {
+          drawCurvedBottomText(
+            ctx,
+            rimStr,
+            cx,
+            cy,
+            R_orbit * 0.905,
+            darkColor,
+            Math.round(R_orbit * 0.068)
+          );
+        }
+
+        return canvas;
+      }
+
+      // Render Custom Styled QR Matrix + Quiet Zone + Optional Center Logo
+      function renderStyledQRCanvas(qrModel, rawFallbackCanvas, marginModules, lightColor, darkColor, accentColor, targetSize) {
+        if (activeFrameMode === "flowcode") {
+          qrCodeContainer.style.borderRadius = "50%";
+          return renderFlowcodeMedallion(
+            qrModel,
+            lightColor,
+            darkColor,
+            accentColor,
+            targetSize
+          );
+        }
+        qrCodeContainer.style.borderRadius = "14px";
+
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = targetSize;
+        finalCanvas.height = targetSize;
+        const ctx = finalCanvas.getContext("2d");
+
+        // Fill background
+        ctx.fillStyle = lightColor;
+        ctx.fillRect(0, 0, targetSize, targetSize);
+
+        if (!qrModel || typeof qrModel.getModuleCount !== "function") {
+          const padPx = Math.round(marginModules * (targetSize / 32));
+          const innerSize = Math.max(64, targetSize - padPx * 2);
+          ctx.imageSmoothingEnabled = false;
+          if (rawFallbackCanvas) {
+            ctx.drawImage(rawFallbackCanvas, padPx, padPx, innerSize, innerSize);
+          }
+          return finalCanvas;
+        }
+
+        const count = qrModel.getModuleCount();
+        const totalModules = count + marginModules * 2;
+        const cellSize = targetSize / totalModules;
+        const offsetPx = marginModules * cellSize;
+
+        const bodyFill = createMatrixFill(ctx, targetSize, darkColor, accentColor, activeShader);
+        const eyeRingFill = activeShader === "accent-eyes" ? accentColor : bodyFill;
+        const eyeBallFill = activeShader === "accent-eyes" ? accentColor : bodyFill;
+
+        // Helper to check if a non-finder data module is dark
+        function isDataDark(r, c) {
+          if (r < 0 || c < 0 || r >= count || c >= count) return false;
+          if (isFinderPattern(r, c, count)) return false;
+          return qrModel.isDark(r, c);
+        }
+
+        // Draw Data Modules
+        ctx.save();
+        ctx.fillStyle = bodyFill;
+
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (isFinderPattern(r, c, count) || !qrModel.isDark(r, c)) continue;
+
+            const x = offsetPx + c * cellSize;
+            const y = offsetPx + r * cellSize;
+
+            ctx.beginPath();
+            if (activeModuleStyle === "dots") {
+              const radius = (cellSize * 0.88) / 2;
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, radius, 0, Math.PI * 2);
+            } else if (activeModuleStyle === "rounded") {
+              const pad = cellSize * 0.05;
+              const w = cellSize - pad * 2;
+              ctx.roundRect(x + pad, y + pad, w, w, w * 0.36);
+            } else if (activeModuleStyle === "diamond") {
+              const cx = x + cellSize / 2;
+              const cy = y + cellSize / 2;
+              const half = (cellSize * 0.96) / 2;
+              ctx.moveTo(cx, cy - half);
+              ctx.lineTo(cx + half, cy);
+              ctx.lineTo(cx, cy + half);
+              ctx.lineTo(cx - half, cy);
+              ctx.closePath();
+            } else if (activeModuleStyle === "classy") {
+              const rLeaf = cellSize * 0.45;
+              ctx.roundRect(x, y, cellSize + 0.3, cellSize + 0.3, [rLeaf, 0, rLeaf, 0]);
+            } else if (activeModuleStyle === "liquid") {
+              const top = isDataDark(r - 1, c);
+              const bottom = isDataDark(r + 1, c);
+              const left = isDataDark(r, c - 1);
+              const right = isDataDark(r, c + 1);
+              const rad = cellSize * 0.46;
+              const rTL = !top && !left ? rad : 0;
+              const rTR = !top && !right ? rad : 0;
+              const rBR = !bottom && !right ? rad : 0;
+              const rBL = !bottom && !left ? rad : 0;
+              ctx.roundRect(x - 0.15, y - 0.15, cellSize + 0.35, cellSize + 0.35, [
+                rTL,
+                rTR,
+                rBR,
+                rBL,
+              ]);
+            } else {
+              // Classic crisp square
+              ctx.rect(x - 0.15, y - 0.15, cellSize + 0.3, cellSize + 0.3);
+            }
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // Draw the 3 Corner Finder Eyes (Top-Left, Top-Right, Bottom-Left)
+        drawFinderEye(
+          ctx,
+          offsetPx,
+          offsetPx,
+          cellSize,
+          activeEyeFrame,
+          activeEyeBall,
+          eyeRingFill,
+          eyeBallFill
+        );
+        drawFinderEye(
+          ctx,
+          offsetPx + (count - 7) * cellSize,
+          offsetPx,
+          cellSize,
+          activeEyeFrame,
+          activeEyeBall,
+          eyeRingFill,
+          eyeBallFill
+        );
+        drawFinderEye(
+          ctx,
+          offsetPx,
+          offsetPx + (count - 7) * cellSize,
+          cellSize,
+          activeEyeFrame,
+          activeEyeBall,
+          eyeRingFill,
+          eyeBallFill
+        );
+
+        // Composite Center Logo if uploaded or preset emblem active
+        if (activeLogoImage) {
+          const scalePct = Math.max(14, Math.min(28, Number(logoScaleEl.value || 22))) / 100;
+          const badgeSize = Math.round(targetSize * scalePct);
+          const padRing = Math.max(4, Math.round(badgeSize * 0.14));
+          const outerBoxSize = badgeSize + padRing * 2;
+          const outerX = Math.round((targetSize - outerBoxSize) / 2);
+          const outerY = Math.round((targetSize - outerBoxSize) / 2);
+
+          // 1. Cutout quiet pad in QR background color
+          ctx.save();
+          traceBadgeShape(ctx, outerX, outerY, outerBoxSize, activeLogoShape);
+          ctx.fillStyle = lightColor;
+          ctx.fill();
+          ctx.lineWidth = Math.max(1.5, Math.round(targetSize / 180));
+          ctx.strokeStyle = activeShader === "accent-eyes" ? accentColor : darkColor;
+          ctx.globalAlpha = 0.18;
+          ctx.stroke();
+          ctx.restore();
+
+          // 2. Clip and draw high-res center logo (aspect-ratio preserved)
+          const logoX = Math.round((targetSize - badgeSize) / 2);
+          const logoY = Math.round((targetSize - badgeSize) / 2);
+
+          ctx.save();
+          traceBadgeShape(ctx, logoX, logoY, badgeSize, activeLogoShape);
+          ctx.clip();
+
+          ctx.fillStyle = lightColor;
+          ctx.fillRect(logoX, logoY, badgeSize, badgeSize);
+
+          const imgW = activeLogoImage.naturalWidth || activeLogoImage.width || badgeSize;
+          const imgH = activeLogoImage.naturalHeight || activeLogoImage.height || badgeSize;
+          const ratio = Math.min(badgeSize / imgW, badgeSize / imgH);
+          const drawW = imgW * ratio;
+          const drawH = imgH * ratio;
+          const drawX = logoX + (badgeSize - drawW) / 2;
+          const drawY = logoY + (badgeSize - drawH) / 2;
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(activeLogoImage, drawX, drawY, drawW, drawH);
+          ctx.restore();
+        }
+
+        return finalCanvas;
+      }
+
+      function generateQRCode(recordHistory = true) {
         const payload = payloadEl.value.trim();
-        const size = Math.max(128, Math.min(1024, Number(sizeEl.value || 256)));
-        const margin = Math.max(0, Math.min(8, Number(marginEl.value || 2)));
+        const size = Math.max(128, Math.min(1024, Number(sizeEl.value || 280)));
+        const margin = Math.max(0, Math.min(8, Number(marginEl.value ?? 2)));
         const ecc = eccEl.value;
         const darkColor = darkColorEl.value;
+        const accentColor = accentColorEl.value;
         const lightColor = lightColorEl.value;
 
+        charCountEl.textContent = `${payload.length} chars`;
+        logoScaleValEl.textContent = `${logoScaleEl.value}%`;
+        updateColorTelemetry();
         setError(null);
-        downloadBtn.disabled = true;
-        copyBtn.disabled = true;
 
         qrCodeContainer.innerHTML = "";
 
         if (!payload) {
-          statusText.textContent = "Waiting for input";
-          metaText.textContent = "No QR generated";
-          setError("Please enter some text or a URL first.");
+          qrCodeContainer.style.display = "none";
+          emptyStateEl.style.display = "flex";
+          statusText.textContent = "Standby";
+          liveDot.style.background = "#5e6673";
+          liveDot.style.boxShadow = "none";
+          metaText.textContent = "Awaiting payload";
+          downloadBtn.disabled = true;
+          copyBtn.disabled = true;
+          copyImgBtn.disabled = true;
           return;
         }
 
-        statusText.textContent = "Generating…";
-        metaText.textContent = `${size}×${size}px · ECC ${ecc} · Margin ${margin}`;
+        qrCodeContainer.style.display = "grid";
+        emptyStateEl.style.display = "none";
+        statusText.textContent = "Calibrating…";
+        metaText.textContent = `${size}×${size}px · ECC ${ecc} · QZ ${margin}${activeLogoImage ? " · LOGO" : ""}`;
 
-        new QRCode(qrCodeContainer, {
-          text: payload,
-          width: size,
-          height: size,
-          colorDark: darkColor,
-          colorLight: lightColor,
-          correctLevel: getECC(ecc),
-        });
+        const tempHolder = document.createElement("div");
+        let qrInstance = null;
+        try {
+          qrInstance = new QRCode(tempHolder, {
+            text: payload,
+            width: size,
+            height: size,
+            colorDark: darkColor,
+            colorLight: lightColor,
+            correctLevel: getECC(ecc),
+          });
+        } catch (err) {
+          setError("Payload exceeds maximum capacity for this error recovery level.");
+          return;
+        }
 
-        // qrcodejs renders async (img/canvas). Give it a moment.
         setTimeout(() => {
+          const rawCanvas = tempHolder.querySelector("canvas");
+          const qrModel = qrInstance ? qrInstance._oQRCode : null;
+          const styledCanvas = renderStyledQRCanvas(
+            qrModel,
+            rawCanvas,
+            margin,
+            lightColor,
+            darkColor,
+            accentColor,
+            size
+          );
+          qrCodeContainer.innerHTML = "";
+          qrCodeContainer.appendChild(styledCanvas);
+
           statusText.textContent = "Ready";
+          liveDot.style.background = "var(--accent)";
+          liveDot.style.boxShadow = "0 0 10px var(--accent)";
           downloadBtn.disabled = false;
           copyBtn.disabled = false;
-        }, 250);
+          copyImgBtn.disabled = false;
+
+          if (recordHistory) {
+            pushHistory(payload);
+          }
+        }, 40);
       }
 
       function downloadQRCode() {
@@ -490,20 +2818,43 @@
 
         const link = document.createElement("a");
         link.href = dataUrl;
-        link.download = "qrcode.png";
+        const slug = payloadEl.value
+          .trim()
+          .replace(/[^a-zA-Z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 24)
+          .toLowerCase();
+        link.download = `qr-${slug || "matrix"}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        showToast("PNG exported");
+      }
+
+      async function copyQRImage() {
+        const canvas = qrCodeContainer.querySelector("canvas");
+        if (!canvas || !navigator.clipboard || !window.ClipboardItem) {
+          showToast("Image copy unsupported in this browser");
+          return;
+        }
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ "image/png": blob }),
+            ]);
+            showToast("Matrix image copied to clipboard");
+          } catch {
+            showToast("Clipboard permission denied");
+          }
+        });
       }
 
       function clearAll() {
         payloadEl.value = "";
-        qrCodeContainer.innerHTML = "";
-        statusText.textContent = "Waiting for input";
-        metaText.textContent = "No QR generated";
-        setError(null);
-        downloadBtn.disabled = true;
-        copyBtn.disabled = true;
+        document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+        clearLogo();
+        payloadEl.focus();
       }
 
       async function copyText() {
@@ -511,20 +2862,382 @@
         if (!payload) return;
         try {
           await navigator.clipboard.writeText(payload);
-          showToast("Copied!");
+          showToast("Payload copied to clipboard");
         } catch {
           showToast("Copy blocked by browser");
         }
       }
 
-      generateBtn.addEventListener("click", generateQRCode);
+      // Center Logo Upload & Controls
+      function handleLogoFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+          showToast("Please select a valid image file");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            activeLogoImage = img;
+            logoThumbEl.innerHTML = "";
+            const previewImg = document.createElement("img");
+            previewImg.src = img.src;
+            previewImg.alt = "Uploaded logo";
+            logoThumbEl.appendChild(previewImg);
+
+            logoFileNameEl.textContent = file.name;
+            logoFileSubEl.textContent = `${img.naturalWidth}×${img.naturalHeight}px · Ready`;
+            logoRemoveBtn.style.display = "inline-block";
+
+            // Automatically promote Error Recovery to H (30%) for logo scannability
+            if (eccEl.value === "L" || eccEl.value === "M") {
+              eccEl.value = "H";
+              logoStatusHintEl.textContent = "Active · ECC boosted to H (30%)";
+            } else {
+              logoStatusHintEl.textContent = "Active · Center emblem locked";
+            }
+
+            generateQRCode(false);
+            showToast("Center logo embedded");
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function clearLogo(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        activeLogoImage = null;
+        logoInputEl.value = "";
+        logoThumbEl.innerHTML = defaultThumbSvg;
+        logoFileNameEl.textContent = "Upload or drop logo";
+        logoFileSubEl.textContent = "PNG, SVG, JPG, WebP";
+        logoRemoveBtn.style.display = "none";
+        logoStatusHintEl.textContent = "Optional · Auto-ECC H";
+        document.querySelectorAll("[data-emblem]").forEach((b) => {
+          b.classList.toggle("active", b.getAttribute("data-emblem") === "none");
+        });
+        generateQRCode(false);
+      }
+
+      // Built-in Vector Emblem Selector
+      document.querySelectorAll("[data-emblem]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-emblem");
+          document
+            .querySelectorAll("[data-emblem]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          if (!key || key === "none" || !builtInEmblems[key]) {
+            clearLogo();
+            return;
+          }
+
+          const svgMarkup = builtInEmblems[key];
+          const blob = new Blob([svgMarkup], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => {
+            activeLogoImage = img;
+            logoThumbEl.innerHTML = svgMarkup;
+            logoFileNameEl.textContent = `Emblem: ${btn.textContent.trim()}`;
+            logoFileSubEl.textContent = "Vector SVG · Ready";
+            logoRemoveBtn.style.display = "inline-block";
+
+            if (eccEl.value === "L" || eccEl.value === "M") {
+              eccEl.value = "H";
+              logoStatusHintEl.textContent = "Active · ECC boosted to H (30%)";
+            } else {
+              logoStatusHintEl.textContent = "Active · Vector emblem locked";
+            }
+            generateQRCode(false);
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        });
+      });
+
+      // Matrix Style Controls (Modules, Eye Frame, Eye Core, Shader)
+      function syncStyleUI() {
+        if (flowcodeTextControlsEl) {
+          flowcodeTextControlsEl.style.display =
+            activeFrameMode === "flowcode" ? "grid" : "none";
+        }
+        document.querySelectorAll("[data-module]").forEach((b) => {
+          b.classList.toggle(
+            "active",
+            b.getAttribute("data-module") === activeModuleStyle
+          );
+        });
+        document.querySelectorAll("[data-eye-frame]").forEach((b) => {
+          b.classList.toggle(
+            "active",
+            b.getAttribute("data-eye-frame") === activeEyeFrame
+          );
+        });
+        document.querySelectorAll("[data-eye-ball]").forEach((b) => {
+          b.classList.toggle(
+            "active",
+            b.getAttribute("data-eye-ball") === activeEyeBall
+          );
+        });
+        document.querySelectorAll("[data-shader]").forEach((b) => {
+          b.classList.toggle(
+            "active",
+            b.getAttribute("data-shader") === activeShader
+          );
+        });
+      }
+
+      document.querySelectorAll("[data-module]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeFrameMode = "square";
+          activeModuleStyle = btn.getAttribute("data-module") || "square";
+          document
+            .querySelectorAll("[data-style-preset]")
+            .forEach((b) => b.classList.remove("active"));
+          syncStyleUI();
+          generateQRCode(false);
+        });
+      });
+
+      document.querySelectorAll("[data-eye-frame]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeFrameMode = "square";
+          activeEyeFrame = btn.getAttribute("data-eye-frame") || "square";
+          document
+            .querySelectorAll("[data-style-preset]")
+            .forEach((b) => b.classList.remove("active"));
+          syncStyleUI();
+          generateQRCode(false);
+        });
+      });
+
+      document.querySelectorAll("[data-eye-ball]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeFrameMode = "square";
+          activeEyeBall = btn.getAttribute("data-eye-ball") || "square";
+          document
+            .querySelectorAll("[data-style-preset]")
+            .forEach((b) => b.classList.remove("active"));
+          syncStyleUI();
+          generateQRCode(false);
+        });
+      });
+
+      document.querySelectorAll("[data-shader]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeShader = btn.getAttribute("data-shader") || "solid";
+          syncStyleUI();
+          generateQRCode(false);
+        });
+      });
+
+      // One-Click Style Deck Presets
+      const stylePresets = {
+        "sofi-flowcode": {
+          frame: "flowcode",
+          module: "dots",
+          eyeFrame: "squircle",
+          eyeBall: "rounded",
+          shader: "solid",
+          dark: "#ffffff",
+          accent: "#0c628d",
+          light: "#071936",
+        },
+        "liquid-pro": {
+          frame: "square",
+          module: "liquid",
+          eyeFrame: "squircle",
+          eyeBall: "rounded",
+          shader: "linear",
+          dark: "#0b1220",
+          accent: "#2563eb",
+          light: "#ffffff",
+        },
+        "cyber-dots": {
+          frame: "square",
+          module: "dots",
+          eyeFrame: "circle",
+          eyeBall: "circle",
+          shader: "accent-eyes",
+          dark: "#0b1220",
+          accent: "#0d9488",
+          light: "#f0fdf4",
+        },
+        "diamond-luxe": {
+          frame: "square",
+          module: "diamond",
+          eyeFrame: "squircle",
+          eyeBall: "diamond",
+          shader: "radial",
+          dark: "#18181b",
+          accent: "#e11d48",
+          light: "#fff1f2",
+        },
+        "leaf-organic": {
+          frame: "square",
+          module: "classy",
+          eyeFrame: "leaf",
+          eyeBall: "rounded",
+          shader: "linear",
+          dark: "#064e3b",
+          accent: "#0d9488",
+          light: "#f0fdf4",
+        },
+        "classic-iso": {
+          frame: "square",
+          module: "square",
+          eyeFrame: "square",
+          eyeBall: "square",
+          shader: "solid",
+          dark: "#0b1220",
+          accent: "#2563eb",
+          light: "#ffffff",
+        },
+      };
+
+      document.querySelectorAll("[data-style-preset]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-style-preset");
+          const cfg = stylePresets[key];
+          if (!cfg) return;
+          document
+            .querySelectorAll("[data-style-preset]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeFrameMode = cfg.frame || "square";
+          activeModuleStyle = cfg.module;
+          activeEyeFrame = cfg.eyeFrame;
+          activeEyeBall = cfg.eyeBall;
+          activeShader = cfg.shader;
+          if (cfg.dark) darkColorEl.value = cfg.dark;
+          if (cfg.accent) accentColorEl.value = cfg.accent;
+          if (cfg.light) lightColorEl.value = cfg.light;
+          syncStyleUI();
+          generateQRCode(false);
+          showToast(`Style: ${btn.textContent.trim()}`);
+        });
+      });
+
+      logoInputEl.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleLogoFile(e.target.files[0]);
+        }
+      });
+
+      logoRemoveBtn.addEventListener("click", clearLogo);
+
+      logoDropzoneEl.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        logoDropzoneEl.classList.add("dragover");
+      });
+
+      logoDropzoneEl.addEventListener("dragleave", () => {
+        logoDropzoneEl.classList.remove("dragover");
+      });
+
+      logoDropzoneEl.addEventListener("drop", (e) => {
+        e.preventDefault();
+        logoDropzoneEl.classList.remove("dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleLogoFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      logoScaleEl.addEventListener("input", () => {
+        logoScaleValEl.textContent = `${logoScaleEl.value}%`;
+        generateQRCode(false);
+      });
+
+      document.querySelectorAll(".shapeBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".shapeBtn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeLogoShape = btn.getAttribute("data-shape") || "squircle";
+          generateQRCode(false);
+        });
+      });
+
+      // Preset Chips
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          payloadEl.value = chip.getAttribute("data-preset") || "";
+          generateQRCode(true);
+        });
+      });
+
+      // Palette Swatches
+      document.querySelectorAll(".paletteBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          darkColorEl.value = btn.getAttribute("data-dark");
+          if (btn.getAttribute("data-accent")) {
+            accentColorEl.value = btn.getAttribute("data-accent");
+          }
+          lightColorEl.value = btn.getAttribute("data-light");
+          generateQRCode(false);
+        });
+      });
+
+      // Event Listeners
+      generateBtn.addEventListener("click", () => {
+        if (!payloadEl.value.trim()) {
+          setError("Enter a URL or text payload to generate a QR code.");
+          return;
+        }
+        generateQRCode(true);
+        showToast("Matrix calibrated");
+      });
+
       downloadBtn.addEventListener("click", downloadQRCode);
+      copyImgBtn.addEventListener("click", copyQRImage);
       clearBtn.addEventListener("click", clearAll);
       copyBtn.addEventListener("click", copyText);
 
-      payloadEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") generateQRCode();
+      // Live Reactive Updates
+      let debounceTimer;
+      payloadEl.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => generateQRCode(false), 120);
       });
+
+      [
+        sizeEl,
+        eccEl,
+        marginEl,
+        darkColorEl,
+        accentColorEl,
+        lightColorEl,
+        brandTextEl,
+        rimTextEl,
+        eyeTagTextEl,
+      ].forEach((input) => {
+        if (!input) return;
+        input.addEventListener("input", () => generateQRCode(false));
+        input.addEventListener("change", () => generateQRCode(true));
+      });
+
+      payloadEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (!payloadEl.value.trim()) {
+            setError("Enter a URL or text payload to generate a QR code.");
+            return;
+          }
+          generateQRCode(true);
+          showToast("Matrix calibrated");
+        }
+      });
+
+      // Initial Boot Render
+      syncStyleUI();
+      renderHistory();
+      generateQRCode(false);
     </script>
   </body>
 </html>
